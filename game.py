@@ -2,6 +2,8 @@ import pygame
 from constants import WIDTH, HEIGHT, BLACK, WHITE, GRAY, FPS, CELL_SIZE
 from snake import Snake
 from food import Food
+from scores import save_score, get_high_score, get_history
+
 
 class Game:
     def __init__(self):
@@ -28,13 +30,13 @@ class Game:
                     if event.key == pygame.K_r:
                         self.reset()
                 else:
-                    if event.key == pygame.K_UP:
+                    if event.key == pygame.K_w:
                         self.snake.change_direction((0, -1))
-                    elif event.key == pygame.K_DOWN:
+                    elif event.key == pygame.K_s:
                         self.snake.change_direction((0, 1))
-                    elif event.key == pygame.K_LEFT:
+                    elif event.key == pygame.K_a:
                         self.snake.change_direction((-1, 0))
-                    elif event.key == pygame.K_RIGHT:
+                    elif event.key == pygame.K_d:
                         self.snake.change_direction((1, 0))
         return True
 
@@ -44,6 +46,7 @@ class Game:
         self.snake.move()
         if self.snake.check_collision():
             self.game_over = True
+            save_score(self.score)
             return
         # Did the snake eat the food?
         if self.snake.body[0] == self.food.position:
@@ -68,14 +71,28 @@ class Game:
 
         # Score
         score_text = self.font.render(f"Score: {self.score}", True, WHITE)
+        high_text  = self.font.render(f"Best: {get_high_score()}", True, WHITE)
         self.screen.blit(score_text, (10, 10))
+        self.screen.blit(high_text,  (WIDTH - high_text.get_width() - 10, 10))
 
         # Game over screen
         if self.game_over:
+            history = get_history()
+            high    = get_high_score()
+
             over_text    = self.font_large.render("GAME OVER", True, WHITE)
-            restart_text = self.font.render(f"Score: {self.score}   |   Press R to restart", True, WHITE)
-            self.screen.blit(over_text,    (WIDTH // 2 - over_text.get_width()    // 2, HEIGHT // 2 - 60))
-            self.screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2 + 10))
+            restart_text = self.font.render("Press R to restart", True, WHITE)
+            high_text    = self.font.render(f"High Score: {high}", True, WHITE)
+            hist_label   = self.font.render("Last 5 Scores:", True, WHITE)
+
+            self.screen.blit(over_text,    (WIDTH // 2 - over_text.get_width()    // 2, HEIGHT // 2 - 120))
+            self.screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2 - 60))
+            self.screen.blit(high_text,    (WIDTH // 2 - high_text.get_width()    // 2, HEIGHT // 2 - 20))
+            self.screen.blit(hist_label,   (WIDTH // 2 - hist_label.get_width()   // 2, HEIGHT // 2 + 30))
+
+            for i, s in enumerate(reversed(history)):
+                entry = self.font.render(f"Round {len(history) - i}: {s}", True, WHITE)
+                self.screen.blit(entry, (WIDTH // 2 - entry.get_width() // 2, HEIGHT // 2 + 60 + i * 28))   
 
         pygame.display.flip()
 
